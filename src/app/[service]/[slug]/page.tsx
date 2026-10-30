@@ -55,9 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!loc || !svc) return { title: "Service Not Found" };
 
+  const areaText = loc.isGroup
+    ? `small towns in ${loc.county}`
+    : `${loc.name}, ${loc.state}`;
+
   return {
     title: `${svc.title} in ${loc.name}, ${loc.state} | Locksmith And Garage Door BH`,
-    description: `Professional ${svc.title.toLowerCase()} services in ${loc.name}, ${loc.state} (${loc.county} County). Call (980) 480-6294 for same-day service.`,
+    description: `Professional ${svc.title.toLowerCase()} services in ${areaText}. ${loc.localNote || `Serving ${loc.county} County.`} Call (980) 480-6294 for same-day service.`,
   };
 }
 
@@ -68,25 +72,44 @@ export default async function ServiceLocationPage({ params }: Props) {
 
   if (!loc || !svc) notFound();
 
-  const isSmallTown = loc.population < 5000;
-  const nearbyNote = isSmallTown
-    ? `We travel to small towns and rural areas across ${loc.county} County. Response times may be longer than in major cities, but we proudly serve communities like ${loc.name}.`
-    : `Fast local service available throughout ${loc.name} and surrounding ${loc.county} County areas.`;
+  const isSmall = loc.population < 8000 || loc.isGroup;
+  const responseNote = isSmall
+    ? `We regularly travel to smaller communities and rural areas. Response times may be a bit longer than in major cities, but we proudly serve this area.`
+    : `Fast local response available throughout ${loc.name} and the surrounding area.`;
+
+  const nearbyText = loc.nearby && loc.nearby.length > 0
+    ? `We also serve nearby areas including ${loc.nearby.join(", ")}.`
+    : "";
+
+  const groupText = loc.isGroup && loc.includedTowns
+    ? `This page covers smaller communities in the area including ${loc.includedTowns.slice(0, 6).join(", ")}${loc.includedTowns.length > 6 ? " and more" : ""}.`
+    : "";
 
   return (
     <main className="min-h-screen bg-white text-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-12">
         <header className="mb-10">
           <h1 className="text-4xl font-bold mb-4">{svc.title} in {loc.name}, {loc.state}</h1>
-          <p className="text-xl text-gray-600 mb-4">Professional {svc.title.toLowerCase()} services for {loc.name} and {loc.county} County.</p>
-          <a href="tel:9804806294" className="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700">Call Now: (980) 480-6294</a>
+          <p className="text-xl text-gray-600 mb-4">
+            Professional {svc.title.toLowerCase()} services for {loc.isGroup ? "communities in" : ""} {loc.name} and {loc.county} County.
+          </p>
+          <a href="tel:9804806294" className="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700">
+            Call Now: (980) 480-6294
+          </a>
         </header>
+
         <section className="mb-10">
           <h2 className="text-2xl font-semibold mb-4">Serving {loc.name}, {loc.state}</h2>
-          <p className="mb-4">Locksmith And Garage Door BH provides reliable {svc.title.toLowerCase()} services in {loc.name}, {loc.state}. Located in {loc.county} County with a population of approximately {loc.population.toLocaleString()}, we cover both residential and commercial needs.</p>
-          <p className="mb-4">{nearbyNote}</p>
-          <p>Whether you need emergency service or scheduled work, our technicians are equipped to handle all common issues in the {loc.name} area.</p>
+          <p className="mb-4">
+            Locksmith And Garage Door BH provides reliable {svc.title.toLowerCase()} services in {loc.name}, {loc.state}. 
+            {loc.localNote ? loc.localNote : `Located in ${loc.county} County with a population of approximately ${loc.population.toLocaleString()}, we cover both residential and commercial needs.`}
+          </p>
+          {groupText && <p className="mb-4">{groupText}</p>}
+          <p className="mb-4">{responseNote}</p>
+          {nearbyText && <p className="mb-4">{nearbyText}</p>}
+          <p>Whether you need emergency service or scheduled work, our technicians are equipped to handle all common issues in this area.</p>
         </section>
+
         <section className="mb-10">
           <h2 className="text-2xl font-semibold mb-4">{svc.title} Services in {loc.name}</h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -95,6 +118,7 @@ export default async function ServiceLocationPage({ params }: Props) {
             ))}
           </ul>
         </section>
+
         <section className="mb-10 bg-gray-50 p-6 rounded-lg">
           <h2 className="text-2xl font-semibold mb-4">Why Choose Us in {loc.name}?</h2>
           <ul className="space-y-2">
@@ -103,13 +127,21 @@ export default async function ServiceLocationPage({ params }: Props) {
             <li>• Upfront pricing — no surprises</li>
             <li>• Same-day service available in most areas</li>
             <li>• All services available in {loc.name} and nearby communities</li>
+            {loc.nearby && loc.nearby.length > 0 && (
+              <li>• Also covering nearby: {loc.nearby.slice(0, 4).join(", ")}</li>
+            )}
           </ul>
         </section>
+
         <section className="text-center">
           <h2 className="text-2xl font-semibold mb-4">Need {svc.title} Service in {loc.name}?</h2>
           <p className="mb-6">Call us now for fast, professional service.</p>
-          <a href="tel:9804806294" className="inline-block bg-blue-600 text-white px-10 py-5 rounded-lg text-xl font-bold hover:bg-blue-700">(980) 480-6294</a>
-          <p className="mt-4 text-sm text-gray-500">Locksmith And Garage Door BH • Serving {loc.name}, {loc.state} and all of NC & SC</p>
+          <a href="tel:9804806294" className="inline-block bg-blue-600 text-white px-10 py-5 rounded-lg text-xl font-bold hover:bg-blue-700">
+            (980) 480-6294
+          </a>
+          <p className="mt-4 text-sm text-gray-500">
+            Locksmith And Garage Door BH • Serving {loc.name}, {loc.state} and all of NC & SC
+          </p>
         </section>
       </div>
     </main>
